@@ -28,7 +28,7 @@ public class OperatorInterface extends SubsystemBase {
             -controller1.getRawAxis(1), 
             -controller1.getRawAxis(0), 
             -controller1.getRawAxis(4), 
-            controller1.getLeftBumper()
+            controller1.getLeftBumperButton()
         );
         drivetrain.updatePoseEstimator();
     }
