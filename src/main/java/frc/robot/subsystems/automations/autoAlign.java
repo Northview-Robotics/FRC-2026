@@ -19,19 +19,18 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.Constants;
 import frc.robot.constants.autoConstants;
-import frc.robot.subsystems.drive;
+import frc.robot.subsystems.Drive;
 
-public class autoAlign extends SubsystemBase{
-    private static autoAlign align = null;
-    private drive drivetrain = drive.getInstance();
+public class AutoAlign extends SubsystemBase{
+    private static AutoAlign align = null;
+    private Drive drivetrain = Drive.getInstance();
     Map<Pose2d, Pose2d> intermediatePoseMap = new HashMap<>();
     Map<Integer, Pose2d> tagMap = new HashMap<>();
 
     //Commented out because all of the auto align paths haven't been made yet
 
-    private autoAlign(){
+    private AutoAlign(){
         intermediatePoseMap.put(autoConstants.BlueTrenchLeft, autoConstants.BlueTrenchLeftI);
         intermediatePoseMap.put(autoConstants.RedTrenchLeft, autoConstants.RedTrenchLeftI);
         intermediatePoseMap.put(autoConstants.RedTrenchRight, autoConstants.RedTrenchRightI);
@@ -61,7 +60,8 @@ public class autoAlign extends SubsystemBase{
     }
 
     private Pose2d getHubPos(){
-        Pose2d hubPos = (DriverStation.getAlliance().get() == Alliance.Blue) ? autoConstants.HubB : autoConstants.HubR;
+        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+        Pose2d hubPos = (alliance == Alliance.Blue) ? autoConstants.HubB : autoConstants.HubR;
         return hubPos;
     }
 
@@ -81,8 +81,9 @@ public class autoAlign extends SubsystemBase{
 
     public void travelToTower(boolean confirmAlign){
         if(confirmAlign){
-            Pose2d towerPos = (Constants.currentAlliance.get() == Alliance.Blue) ? autoConstants.TowerB : autoConstants.TowerR;
-            Pose2d towerIPos = (Constants.currentAlliance.get() == Alliance.Blue) ? autoConstants.TowerBI : autoConstants.TowerRI;
+            Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+            Pose2d towerPos = (alliance == Alliance.Blue) ? autoConstants.TowerB : autoConstants.TowerR;
+            Pose2d towerIPos = (alliance == Alliance.Blue) ? autoConstants.TowerBI : autoConstants.TowerRI;
             followGeneratedPath(towerIPos, towerPos);
         }
     }
@@ -123,9 +124,9 @@ public class autoAlign extends SubsystemBase{
         //        botPose.getTranslation().getDistance(autoConstants.RedTrenchLeft.getTranslation()) < 1;
     }
 
-    public static autoAlign getInstance(){
+    public static AutoAlign getInstance(){
         if (align == null){
-            align = new autoAlign();
+            align = new AutoAlign();
         }
         return align;
     }

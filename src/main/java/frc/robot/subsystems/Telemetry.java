@@ -11,7 +11,7 @@ public class Telemetry extends SubsystemBase{
     private static Telemetry telemetry = null;
     private Field2d field2d;
     public ChassisSpeeds currentVelocity;
-    private drive drivetrain = drive.getInstance();
+    private Drive drivetrain = Drive.getInstance();
 
     private Telemetry(){
         field2d = new Field2d();

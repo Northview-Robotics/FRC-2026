@@ -5,50 +5,68 @@ import frc.robot.subsystems.automations.Vision;
 import frc.robot.test.ShooterTest;
 import edu.wpi.first.wpilibj.XboxController;
 
-public class operatorinterface extends SubsystemBase{
-    private static operatorinterface oi = null;
+public class OperatorInterface extends SubsystemBase {
+    private static OperatorInterface instance = null;
     private XboxController controller1;
-    private drive drivetrain = drive.getInstance();
+    private Drive drivetrain = Drive.getInstance();
     private Vision vision = Vision.getInstance();
-    private intake ballIntake = intake.getInstance();
-    private shooter ballShooter = shooter.getInstance();
-    private climb climber = climb.getInstance();
+    private Intake ballIntake = Intake.getInstance();
+    private Shooter ballShooter = Shooter.getInstance();
+    private Climb climber = Climb.getInstance();
+    private Indexer indexer = Indexer.getInstance();
     private Telemetry telemetry = Telemetry.getInstance();
     private ShooterTest shooterTest = ShooterTest.getInstance();
 
-    private operatorinterface(){
+    private int lastPOV = -1;
+
+    private OperatorInterface() {
         controller1 = new XboxController(0);
     }
 
-    private void updateDrive(){
-        drivetrain.driveInputHandler(-controller1.getRawAxis(1), -controller1.getRawAxis(0), -controller1.getRawAxis(4), controller1.getYButtonPressed(), controller1.getAButtonPressed());
+    private void updateDrive() {
+        drivetrain.driveInputHandler(
+            -controller1.getRawAxis(1), 
+            -controller1.getRawAxis(0), 
+            -controller1.getRawAxis(4), 
+            controller1.getLeftBumper()
+        );
         drivetrain.updatePoseEstimator();
     }
 
-    private void updateClimb(){
+    private void updateClimb() {
         climber.climbInputHandler(controller1.getPOV());
     }
-
-    private void updateIntake(){
-        ballIntake.intakeInputHandler(controller1.getLeftBumperButtonPressed(), controller1.getLeftTriggerAxis());
+    private void updateIntake() {
+        boolean outtakeButton = controller1.getPOV() == 90; // DPAD Right
+        boolean deployButton = controller1.getPOV() == 270; // DPAD Left
+        
+        ballIntake.intakeInputHandler(
+            controller1.getLeftTriggerAxis(),
+            outtakeButton,
+            deployButton && (controller1.getPOV() != lastPOV), 
+            controller1.getRightBumper()
+        );
+        lastPOV = controller1.getPOV();
+    }
+    
+    private void updateShooter() {
+        double rightTrigger = controller1.getRightTriggerAxis();
+        ballShooter.shooterInputManager(rightTrigger);
+        
+        boolean outtakeButton = controller1.getPOV() == 90;
+        indexer.indexerInputHandler(ballShooter.isAtTargetSpeed(), outtakeButton);
     }
 
-    private void updateShooter(){
-        ballShooter.shooterInputManager(controller1.getRightBumperButtonPressed(), controller1.getRightTriggerAxis());
-        // shooterTest.SetTestVelocity(controller1.getBButtonPressed());
-        shooterTest.runFlyWheelSysID(controller1.getBButtonPressed());
-    }
-
-    private void updateTelemetry(){
+    private void updateTelemetry() {
         telemetry.update();
     }
 
-    private void updateVision(){
+    private void updateVision() {
         vision.updateSimVision(drivetrain.getRobotPose());
     }
     
     @Override
-    public void periodic(){
+    public void periodic() {
         updateDrive();
         updateVision();
         updateTelemetry();
@@ -57,10 +75,10 @@ public class operatorinterface extends SubsystemBase{
         updateClimb();
     }
 
-    public static operatorinterface getInstance(){
-        if (oi == null){
-            oi = new operatorinterface();
+    public static OperatorInterface getInstance() {
+        if (instance == null) {
+            instance = new OperatorInterface();
         }
-        return oi;
+        return instance;
     }
 }

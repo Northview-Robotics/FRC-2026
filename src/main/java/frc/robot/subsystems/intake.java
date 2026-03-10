@@ -1,11 +1,9 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Second;
@@ -36,8 +34,8 @@ import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.local.SparkWrapper;
 import yams.motorcontrollers.remote.TalonFXWrapper;
 
-public class intake extends SubsystemBase{
-    private static intake ballIntake = null;
+public class Intake extends SubsystemBase {
+    private static Intake instance = null;
 
     private TalonFX intakeMotor;
     private TalonFX hopperMotor;
@@ -52,152 +50,151 @@ public class intake extends SubsystemBase{
 
     private LEDS leds = LEDS.getInstance();
 
-     public boolean stateIntaking;
+    private Arm pivot;
+    private ArmConfig pivotConfig;
 
-    private intake(){
+    private boolean hopperDeployed = false;
+    private boolean intakeActive = false;
+
+    private Intake() {
         hopperMotor = new TalonFX(idConstants.falcon500_I1);
         intakeMotor = new TalonFX(idConstants.falcon500_I2);
         pivotMotor = new SparkMax(idConstants.neo_I3, MotorType.kBrushless);
-        stateIntaking = false;
 
         falconConfig = new SmartMotorControllerConfig(this)
-        .withClosedLoopController(0.00016541, 0, 0, RPM.of(5000), RotationsPerSecondPerSecond.of(2500))
-        .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-        .withIdleMode(MotorMode.COAST)
-        .withTelemetry("KickerMotor", TelemetryVerbosity.HIGH)
-        .withStatorCurrentLimit(Amps.of(20))
-        .withMotorInverted(true)
-        .withClosedLoopRampRate(Seconds.of(0.25))
-        .withOpenLoopRampRate(Seconds.of(0.25))
-        .withFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
-        .withSimFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
-        .withControlMode(ControlMode.CLOSED_LOOP);
+                .withClosedLoopController(0.00016541, 0, 0, RPM.of(5000), RotationsPerSecondPerSecond.of(2500))
+                .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+                .withIdleMode(MotorMode.COAST)
+                .withTelemetry("IntakeMotor", TelemetryVerbosity.HIGH)
+                .withStatorCurrentLimit(Amps.of(20))
+                .withMotorInverted(true)
+                .withClosedLoopRampRate(Seconds.of(0.25))
+                .withOpenLoopRampRate(Seconds.of(0.25))
+                .withFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
+                .withSimFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
+                .withControlMode(ControlMode.CLOSED_LOOP);
 
         neoConfig = new SmartMotorControllerConfig(this)
-        .withClosedLoopController(0.00016541, 0, 0, RPM.of(5000), RotationsPerSecondPerSecond.of(2500))
-        .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-        .withIdleMode(MotorMode.COAST)
-        .withTelemetry("KickerMotor", TelemetryVerbosity.HIGH)
-        .withStatorCurrentLimit(Amps.of(20))
-        .withMotorInverted(true)
-        .withClosedLoopRampRate(Seconds.of(0.25))
-        .withOpenLoopRampRate(Seconds.of(0.25))
-        .withFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
-        .withSimFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
-        .withControlMode(ControlMode.CLOSED_LOOP);
+                .withClosedLoopController(0.00016541, 0, 0, RPM.of(5000), RotationsPerSecondPerSecond.of(2500))
+                .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+                .withIdleMode(MotorMode.COAST)
+                .withTelemetry("PivotMotor", TelemetryVerbosity.HIGH)
+                .withStatorCurrentLimit(Amps.of(20))
+                .withMotorInverted(true)
+                .withClosedLoopRampRate(Seconds.of(0.25))
+                .withOpenLoopRampRate(Seconds.of(0.25))
+                .withFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
+                .withSimFeedforward(new SimpleMotorFeedforward(0.27937, 0.089836, 0.014557))
+                .withControlMode(ControlMode.CLOSED_LOOP);
 
-        pivotingSystem = new SparkWrapper(pivotMotor, DCMotor.getFalcon500(1), neoConfig);
+        pivotingSystem = new SparkWrapper(pivotMotor, DCMotor.getNEO(1), neoConfig);
 
         pivotConfig = new ArmConfig(pivotingSystem)
-        .withLength(Meters.of(0.3366))
-        .withSoftLimits(Degrees.of(26.5), Degrees.of(152))
-        .withHardLimit(Degrees.of(26.5), Degrees.of(152))
-        .withTelemetry("Pivot", TelemetryVerbosity.HIGH)
-        .withMass(Kilograms.of(2.714))
-        .withStartingPosition(Degrees.of(0));
+                .withLength(Meters.of(0.3366))
+                .withSoftLimits(Degrees.of(26.5), Degrees.of(215))
+                .withHardLimit(Degrees.of(26.5), Degrees.of(215))
+                .withTelemetry("Pivot", TelemetryVerbosity.HIGH)
+                .withMass(Kilograms.of(2.714))
+                .withStartingPosition(Degrees.of(0));
 
         pivot = new Arm(pivotConfig);
 
         hopperSystem = new TalonFXWrapper(hopperMotor, DCMotor.getFalcon500(1), falconConfig);
-        intakingSystem = new TalonFXWrapper(intakeMotor, DCMotor.getNEO(1), falconConfig);
+        intakingSystem = new TalonFXWrapper(intakeMotor, DCMotor.getFalcon500(1), falconConfig);
     }
 
-    //Intaking Code
-    public void changeIntakeState(boolean toggle){
-        //To toggle between intaking and not intaking !!!! :thumbs_up:
-        stateIntaking = toggle ? !stateIntaking : stateIntaking;
-        if(stateIntaking) {
-            setIntakePivot();
-            intakingSystem.setVoltage(Volts.of(calcIntakingVolts()));
-            runHopper(true);
-        }
-        else{
-            intakingSystem.setVoltage(Volts.of(0));
-        }
-    }
-
-    //For scaling intake speed with drive speed
-    public double calcIntakingVolts(){
+    public double calcIntakingVolts() {
         telemetry = Telemetry.getInstance();
         ChassisSpeeds chassisVel = telemetry.currentVelocity;
+        if (chassisVel == null) return 7.0;
         double botVelocity = Math.hypot(chassisVel.vxMetersPerSecond, chassisVel.vyMetersPerSecond);
         double maxVelocity = Constants.maxDriveSpeed;
         double maxVolts = Constants.maxVolts;
-        
+
         double scaling = 0.7 - (botVelocity / maxVelocity);
-        return maxVolts*scaling;
+        return maxVolts * scaling;
     }
 
-    public void runIntake(boolean forward){
-        if(forward) intakingSystem.setVoltage(Volts.of(3));
-        else{
-            intakingSystem.setVoltage(Volts.of(-3));
-        }
+    public void runIntake(double voltage) {
+        intakingSystem.setVoltage(Volts.of(voltage));
     }
 
-    //Pivot Code
-    ArmConfig pivotConfig;
+    public void runHopper(double voltage) {
+        hopperSystem.setVoltage(Volts.of(voltage));
+    }
 
-    
-    private Arm pivot;
-
-    public void setAngle(Angle angle){
+    public void setAngle(Angle angle) {
         pivot.setAngle(angle);
     }
 
-    //Increase the period of the cos function IMPORTANT
-    public void rockingPivot(boolean reload){
-        double pivotDir = getPivotDir();
-        if(!reload){
-            if(pivotDir == 1) setAngle(Degrees.of(Constants.rockingAngles[0]));
-            else if(pivotDir == -1){
-                setAngle(Degrees.of(Constants.rockingAngles[1]));
+    public void setIntakePivot() {
+        setAngle(Degrees.of(Constants.intakeAngle));
+    }
+
+    public void setShootingPivot() {
+        setAngle(Degrees.of(Constants.shootingAngle));
+    }
+
+    public void setStowedPivot() {
+        setAngle(Degrees.of(Constants.rockingAngles[0]));
+    }
+
+    public void setIntakeActive(boolean active) {
+        this.intakeActive = active;
+    }
+
+    public void toggleHopperDeployment() {
+        hopperDeployed = !hopperDeployed;
+        if (hopperDeployed) {
+            setIntakePivot();
+        } else {
+            setStowedPivot();
+        }
+    }
+
+    public void oscillateIntake() {
+        double k = (2 * Math.PI) / Constants.osilationTIme;
+        double magnitude = 5; 
+        double offset = Math.sin(k * Timer.getFPGATimestamp()) * magnitude;
+        setAngle(Degrees.of(Constants.intakeAngle + offset));
+    }
+
+    public void intakeInputHandler(double intakeTrigger, boolean outtakeButton, boolean deployButton, boolean oscillateButton) {
+        if (deployButton) {
+            toggleHopperDeployment();
+        }
+
+        if (outtakeButton) {
+            runIntake(-6);
+            runHopper(-6);
+            leds.intakeSolid();
+        } else if (intakeTrigger > 0.3 || intakeActive) {
+            runIntake(calcIntakingVolts());
+            runHopper(4);
+            leds.intakeSolid();
+            if (oscillateButton) {
+                oscillateIntake();
+            } else if (hopperDeployed || intakeActive) {
+                setIntakePivot();
+            }
+        } else {
+            runIntake(0);
+            runHopper(0);
+            if (oscillateButton) {
+                oscillateIntake();
             }
         }
     }
 
-    public void setShootingPivot(){
-        setAngle(Degrees.of(Constants.shootingAngle));
-    }
 
-    public void setIntakePivot(){
-        setAngle(Degrees.of(Constants.intakeAngle));
-    }
-
-    public double getPivotDir(){
-        double k = (2*Math.PI)/Constants.osilationTIme;
-        double dir = Math.cos(k*Timer.getFPGATimestamp());
-        return dir;
-    }
-
-    //Hopper Code
-    public void runHopper(boolean indexF){
-        //Account for movement vector later to save power
-        if(indexF) hopperSystem.setVoltage(Volts.of(3));
-        else{
-            if(indexF) hopperSystem.setVoltage(Volts.of(-3));
-        }
-    } 
-
-    public void sysId(double voltage,double step,double duration){
+    public void sysId(double voltage, double step, double duration) {
         pivot.sysId(Volts.of(voltage), Volts.of(step).per(Second), Seconds.of(duration)).schedule();
     }
 
-    public void intakeInputHandler(boolean input1, double input2){
-        changeIntakeState(input1);
-        leds.intakeSolid();
-        if(input2 > 0.3){
-            setIntakePivot();
-            runHopper(false);
-            runIntake(false);
+    public static Intake getInstance() {
+        if (instance == null) {
+            instance = new Intake();
         }
-    }
-
-    
-    public static intake getInstance(){
-        if (ballIntake == null){
-            ballIntake = new intake();
-        }
-        return ballIntake;
+        return instance;
     }
 }

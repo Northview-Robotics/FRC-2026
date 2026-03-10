@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.constants.VisionConstants;
-import frc.robot.subsystems.drive;
+import frc.robot.subsystems.Drive;
 
 import java.util.List;
 
@@ -145,7 +145,7 @@ public class Vision extends SubsystemBase{
                     est -> {
                         // Change our trust in the measurement based on the tags we can see
                         var estStdDevs = getEstimationStdDevs();
-                        drive.getInstance().swerveDrive.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+                        Drive.getInstance().swerveDrive.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
                     });
         }
     }
@@ -200,7 +200,7 @@ public class Vision extends SubsystemBase{
     public void updateSimVision(Pose2d botPose){
         visionSim.update(botPose);
         Optional<Pose3d> camPose = visionSim.getCameraPose(cameraSim);
-        as_cameraPose.set(camPose.get());
+        camPose.ifPresent(as_cameraPose::set);
         as_aprilTags.set(field.getTags().stream().map(tag -> tag.pose).toArray(Pose3d[]::new));
     }
 
