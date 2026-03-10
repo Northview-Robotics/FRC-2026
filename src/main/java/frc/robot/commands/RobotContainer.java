@@ -8,8 +8,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.shooter.ChargeShooter;
 import frc.robot.commands.shooter.FireShooter;
-import frc.robot.commands.climb.climbUp;
-import frc.robot.commands.climb.climbDown;
+import frc.robot.commands.climb.ClimbUp;
+import frc.robot.commands.climb.ClimbDown;
 import frc.robot.commands.intake.Intaking;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
@@ -26,8 +26,8 @@ public class RobotContainer {
   //Commands
   ChargeShooter cShooter;
   FireShooter fShooter;
-  climbDown cDown;
-  climbUp cUp;
+  ClimbDown cDown;
+  ClimbUp cUp;
   Intaking intakeBalls;
 
   public RobotContainer() {
@@ -36,8 +36,8 @@ public class RobotContainer {
 
     cShooter = new ChargeShooter(ballShooter, 2.0);
     fShooter = new FireShooter(ballShooter, ballIntake, 1.0);
-    cDown = new climbDown(climber);
-    cUp = new climbUp(climber);
+    cDown = new ClimbDown(climber);
+    cUp = new ClimbUp(climber);
     intakeBalls = new Intaking(ballIntake, 2.0);
   }
 
